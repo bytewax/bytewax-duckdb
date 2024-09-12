@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types:
+    - published
+  pull_request: {}
+  merge_group:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  repo-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Set up uv
+        run: curl -LsSf https://astral.sh/uv/0.3.5/install.sh | sh
+      - uses: extractions/setup-just@v2
+      - name: Install cbfmt
+        run: |
+            mkdir /tmp/cbfmt && cd $_
+            curl -fsSL -o cbfmt.tar.gz "https://github.com/lukas-reineke/cbfmt/releases/download/v0.2.0/cbfmt_linux-x86_64_v0.2.0.tar.gz"
+            tar --strip-components 1 -xvf cbfmt.tar.gz
+            mv cbfmt /usr/local/bin/
+      - name: Prep venv
+        shell: bash
+        run: |
+          uv venv -p 3.12 venv
+          . venv/bin/activate
+          uv pip sync --strict requirements/dev.txt
+      - name: Check pre-commit hooks
+        shell: bash
+        run: |
+          . venv/bin/activate
+          just lint-pc
+      - name: Run lints
+        shell: bash
+        run: |
+          . venv/bin/activate
+          just lint
+      - name: Run documentation tests
+        shell: bash
+        run: |
+          . venv/bin/activate
+          just test-doc
+
+  build:
+    strategy:
+      matrix:
+        # Build on just  3.12 since this is a pure Python project.
+        python-version: ['3.12']
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set up uv
+      run: curl -LsSf https://astral.sh/uv/0.3.5/install.sh | sh
+    - uses: extractions/setup-just@v2
+    - name: Prep test venv
+      shell: bash
+      run: |
+        uv venv -p ${{ matrix.python-version }} venv/
+        . venv/bin/activate
+        uv pip sync --strict requirements/build-py${{ matrix.python-version }}.txt
+    - name: Build and install the wheel
+      shell: bash
+      run: |
+        . venv/bin/activate
+        uv pip install build
+        python -m build --wheel .
+    - name: Store the distribution packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  test:
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    runs-on: ubuntu-latest
+    needs:
+    - build
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Set up uv
+      run: curl -LsSf https://astral.sh/uv/0.3.5/install.sh | sh
+    - uses: extractions/setup-just@v2
+    - name: Prep test venv
+      shell: bash
+      run: |
+        uv venv -p ${{ matrix.python-version }} venv/
+        . venv/bin/activate
+        uv pip sync --strict requirements/build-py${{ matrix.python-version }}.txt
+    - name: Run Python tests
+      shell: bash
+      run: |
+        . venv/bin/activate
+        WHEEL_FILE=$(ls ./dist/*.whl)
+        uv pip install -v --no-deps $WHEEL_FILE
+        just test-py
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: github.event_name == 'release' && github.event.action == 'published'
+    needs:
+    - build
+    - test
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/bytewax-duckdb
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+    steps:
+    - name: Download all the dists
+      uses: actions/download-artifact@v4
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish distribution 📦 to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/ # Remove when publishing to PyPI
+        skip-existing: true

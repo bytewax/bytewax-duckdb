@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: ruff-format
+        name: "format Python"
+        language: system
+        types: ["python"]
+        entry: "just fmt-py"
+      - id: cbfmt
+        name: "format Markdown code blocks"
+        language: system
+        types: ["markdown"]
+        entry: "just fmt-md"
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+        name: "format Rust"
