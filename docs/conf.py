@@ -191,8 +191,7 @@ myst_url_schemes = {
         "classes": ["github"],
     },
     "gh-path": {
-        "url": f"https://github.com/bytewax/bytewax-duckdb/blob/{git_id}"
-        "#{path}}#",
+        "url": f"https://github.com/bytewax/bytewax-duckdb/blob/{git_id}" "#{path}}#",
         "title": "bytewax/bytewax-duckdb{{ path }}",
         "classes": ["github"],
     },
@@ -219,8 +218,12 @@ autodoc2_output_dir = "api"
 # Python package to parse to generate Markdown API docs for in the
 # above directory.
 autodoc2_packages = [
-    "../src/bytewax/bytewax-duckdb"
+    {
+        "path": "../src/bytewax/bytewax_duckdb/",
+        "module": "bytewax.bytewax_duckdb",
+    },
 ]
+
 # Controls the generation of those Markdown files. We have some
 # specific formatting requirements and inhereit from the built-in
 # renderer. This is why we need the path adjustment at the beginning
