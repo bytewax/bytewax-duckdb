@@ -23,7 +23,8 @@ classifiers = [
 ]
 
 dependencies = [
-  "bytewax>=0.21"
+  "bytewax>=0.21",
+  "pyarrow>=17.0.0"
 ]
 
 [project.urls]
