@@ -1,1 +1,0 @@
-"""Testing duckdb with bytewax."""

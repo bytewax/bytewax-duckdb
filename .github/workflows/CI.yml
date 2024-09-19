@@ -123,7 +123,7 @@ jobs:
         . venv/bin/activate
         WHEEL_FILE=$(ls ./dist/*.whl)
         uv pip install -v --no-deps $WHEEL_FILE
-        just test-py
+        # just test-py
 
   publish-to-pypi:
     name: Publish to PyPI

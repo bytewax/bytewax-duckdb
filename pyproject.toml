@@ -24,7 +24,8 @@ classifiers = [
 
 dependencies = [
   "bytewax>=0.21",
-  "pyarrow>=17.0.0"
+  "pyarrow>=17.0.0",
+  "duckdb==1.1.0"
 ]
 
 [project.urls]
@@ -38,6 +39,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
 addopts = "-v"
+testpaths = [
+  "pytests"
+]
 
 [tool.mypy]
 disallow_untyped_defs = true
