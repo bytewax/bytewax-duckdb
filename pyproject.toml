@@ -25,7 +25,7 @@ classifiers = [
 dependencies = [
   "bytewax>=0.21",
   "pyarrow>=17.0.0",
-  "duckdb==1.1.0"
+  "duckdb==1.1.2"
 ]
 
 [project.urls]
