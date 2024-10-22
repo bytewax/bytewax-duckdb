@@ -58,7 +58,7 @@ lint: _assert-venv
     vermin --config-file vermin-lib.ini src/ pytests/
     vermin --config-file vermin-dev.ini docs/ *.py
     ruff check src/ pytests/ docs/
-    mypy -p bytewax.bytewax_duckdb
+    mypy -p bytewax.duckdb
     mypy pytests/ docs/
 
 # Manually check that all pre-commit hooks pass; runs in CI

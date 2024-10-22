@@ -1,12 +1,17 @@
-"""Tests for bytewax.bytewax_duckdb module."""
+"""Tests for the bytewax.duckdb module."""
 
 import os
 from pathlib import Path
-from unittest.mock import patch
+from typing import Dict, List, Tuple, Union
 
+import duckdb
 import pytest
 
-from bytewax.bytewax_duckdb import DuckDBSink, DuckDBSinkPartition
+import bytewax.duckdb.operators as duck_op
+import bytewax.operators as op
+from bytewax.dataflow import Dataflow
+from bytewax.duckdb import DuckDBSink
+from bytewax.testing import TestingSource, run_main
 
 
 # Skip the license warning in tests
@@ -17,9 +22,9 @@ def suppress_license_warning(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def db_path(tmp_path: Path) -> str:
+def db_path(tmp_path: Path) -> Path:
     """Generate a temporary path for the DuckDB database file."""
-    return str(tmp_path / "test_duckdb.db")
+    return tmp_path / "test_duckdb.db"
 
 
 @pytest.fixture
@@ -34,93 +39,45 @@ def create_table_sql() -> str:
     return "CREATE TABLE test_table (id INTEGER, name TEXT)"
 
 
-@pytest.fixture
-def sink_partition(
-    db_path: str, table_name: str, create_table_sql: str
-) -> DuckDBSinkPartition:
-    """Fixture for the DuckDBSinkPartition class."""
-    return DuckDBSinkPartition(
-        db_path=db_path,
-        table_name=table_name,
-        create_table_sql=create_table_sql,
-        resume_state=None,
+def test_duckdb_sink(db_path: Path, table_name: str) -> None:
+    flow = Dataflow("duckdb")
+
+    def create_dict(value: int) -> Tuple[str, List[Dict[str, Union[int, str]]]]:
+        return (str(value), [{"id": value, "name": "Alice"}])
+
+    inp = op.input("inp", flow, TestingSource(range(100)))
+    dict_stream = op.map("dict", inp, create_dict)
+    op.output(
+        "out",
+        dict_stream,
+        DuckDBSink(
+            db_path,
+            table_name,
+            f"CREATE TABLE {table_name} (id INTEGER, name TEXT)",
+        ),
     )
+    run_main(flow)
+    conn = duckdb.connect(db_path)
+    assert conn.sql(f"SELECT COUNT(*) from {table_name}").fetchall() == [(100,)]
 
 
-def test_duckdbsinkpartition_initialization(
-    sink_partition: DuckDBSinkPartition, db_path: str, table_name: str
-) -> None:
-    """Test the initialization of DuckDBSinkPartition."""
-    assert sink_partition.db_path == db_path
-    assert sink_partition.table_name == table_name
-    assert sink_partition.total_rows_written == 0
-    assert len(sink_partition.buffer) == 0
+def test_duckdb_operator(db_path: Path, table_name: str) -> None:
+    flow = Dataflow("duckdb")
 
+    def create_dict(value: int) -> Tuple[str, Dict[str, Union[int, str]]]:
+        return (str(value), {"id": value, "name": "Alice"})
 
-def test_duckdbsinkpartition_write_batch(sink_partition: DuckDBSinkPartition) -> None:
-    """Test the write_batch method of DuckDBSinkPartition."""
-    items = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
-    sink_partition.write_batch(items)
-    assert len(sink_partition.buffer) == 2  # All items should be in the buffer
-
-
-def test_duckdbsinkpartition_safe_write(sink_partition: DuckDBSinkPartition) -> None:
-    """Test the _safe_write method of DuckDBSinkPartition."""
-    items = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
-    sink_partition.write_batch(items)
-
-    # Mock _safe_write to avoid actual DuckDB interaction
-    with patch.object(
-        sink_partition, "_safe_write", wraps=sink_partition._safe_write
-    ) as mock_write:
-        sink_partition._safe_write(items)
-        mock_write.assert_called_once()
-
-
-def test_duckdbsinkpartition_snapshot(sink_partition: DuckDBSinkPartition) -> None:
-    """Test the snapshot method of DuckDBSinkPartition."""
-    items = [{"id": 1, "name": "Alice"}]
-    sink_partition.write_batch(items)
-    snapshot = sink_partition.snapshot()
-    assert snapshot == (0, 1)  # 0 rows written, 1 item in buffer
-
-
-def test_duckdbsinkpartition_close(sink_partition: DuckDBSinkPartition) -> None:
-    """Test the close method of DuckDBSinkPartition."""
-    items = [{"id": 1, "name": "Alice"}]
-    sink_partition.write_batch(items)
-    with patch.object(sink_partition, "_safe_write") as mock_write:
-        sink_partition.close()
-        mock_write.assert_called_once()  # Ensure the buffer was written before closing
-
-
-def test_duckdbsink_initialization() -> None:
-    """Test the initialization of DuckDBSink."""
-    sink = DuckDBSink(db_path_template="test_{partition}.db", table_name="test_table")
-    assert sink.db_path_template == "test_{partition}.db"
-    assert sink.table_name == "test_table"
-
-
-def test_duckdbsink_list_parts() -> None:
-    """Test the list_parts method of DuckDBSink."""
-    sink = DuckDBSink(db_path_template="test_{partition}.db", table_name="test_table")
-    parts = sink.list_parts()
-    assert parts == ["partition_0", "partition_1", "partition_2", "partition_3"]
-
-
-def test_duckdbsink_part_fn() -> None:
-    """Test the part_fn method of DuckDBSink."""
-    sink = DuckDBSink(db_path_template="test_{partition}.db", table_name="test_table")
-    partition_index = sink.part_fn("some_key")
-    assert isinstance(partition_index, int)
-
-
-def test_duckdbsink_build_part(db_path: str, table_name: str) -> None:
-    """Test the build_part method of DuckDBSink."""
-    sink = DuckDBSink(db_path_template="test_{partition}.db", table_name=table_name)
-    partition = sink.build_part(
-        step_id="step_1", for_part="partition_0", resume_state=None
+    inp = op.input("inp", flow, TestingSource(range(100)))
+    dict_stream = op.map("dict", inp, create_dict)
+    duck_op.output(
+        "out",
+        dict_stream,
+        db_path,
+        table_name,
+        f"CREATE TABLE {table_name} (id INTEGER, name TEXT)",
     )
-    assert isinstance(partition, DuckDBSinkPartition)
-    assert partition.db_path == "test_partition_0.db"
-    assert partition.table_name == table_name
+    run_main(flow)
+    conn = duckdb.connect(db_path)
+    assert conn.sql(f"SELECT COUNT(*) from {table_name}").fetchall() == [(100,)]
+    run_main(flow)
+    assert conn.sql(f"SELECT COUNT(*) from {table_name}").fetchall() == [(200,)]
