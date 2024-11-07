@@ -219,8 +219,8 @@ autodoc2_output_dir = "api"
 # above directory.
 autodoc2_packages = [
     {
-        "path": "../src/bytewax/bytewax_duckdb/",
-        "module": "bytewax.bytewax_duckdb",
+        "path": "../src/bytewax/duckdb/",
+        "module": "bytewax.duckdb",
     },
 ]
 
