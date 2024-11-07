@@ -65,10 +65,7 @@ bytewax==0.21.0 \
     --hash=sha256:ece6452ce1c609915447402214714d7392cb7f864ea968a584b649ab8007466d \
     --hash=sha256:f551b2eef7b354b439fd13f62349528c1eff9e59ffbfdf2a7d4fe0141b4ae6ca \
     --hash=sha256:fffebf6ee9ed44f701d16156ce386d2ed2b7d3fe9cf3b381183c49e37ab8639b
-    # via
-    #   -r requirements/lib-py3.12.txt
-    #   bytewax-duckdb (pyproject.toml)
-    #   bytewax-duckdb
+    # via bytewax-duckdb
 certifi==2024.8.30 \
     --hash=sha256:922820b53db7a7257ffbda3f597266d435245903d80737e34f8a45ff3e3230d8 \
     --hash=sha256:bec941d2aa8195e248a60b31ff9f0558284cf01a52591ceda73ea9afffd69fd9
@@ -242,10 +239,7 @@ duckdb==1.1.0 \
     --hash=sha256:eb66e9e7391801928ea134dcab12d2e4c97f2ce0391c603a3e480bbb15830bc8 \
     --hash=sha256:ecb19319883564237a7a03a104dbe7f445e73519bb67108fcab3d19b6b91fe30 \
     --hash=sha256:f6486323ab20656d22ffa8f3c6e109dde30d0b327b7c831f22ebcfe747f97fb0
-    # via
-    #   -r requirements/lib-py3.12.txt
-    #   bytewax-duckdb (pyproject.toml)
-    #   bytewax-duckdb
+    # via bytewax-duckdb
 executing==2.1.0 \
     --hash=sha256:8d63781349375b5ebccc3142f4b30350c0cd9c79f921cde38be2be4637e98eaf \
     --hash=sha256:8ea27ddd260da8150fa5a708269c4a10e76161e2496ec3e587da9e3c0fe4b9ab
@@ -465,9 +459,7 @@ numpy==2.1.1 \
     --hash=sha256:f7506387e191fe8cdb267f912469a3cccc538ab108471291636a96a54e599556 \
     --hash=sha256:fac6e277a41163d27dfab5f4ec1f7a83fac94e170665a4a50191b545721c6521 \
     --hash=sha256:fcd8f556cdc8cfe35e70efb92463082b7f43dd7e547eb071ffc36abc0ca4699b
-    # via
-    #   -r requirements/lib-py3.12.txt
-    #   pyarrow
+    # via pyarrow
 orjson==3.10.7 \
     --hash=sha256:084e537806b458911137f76097e53ce7bf5806dda33ddf6aaa66a028f8d43a23 \
     --hash=sha256:09b2d92fd95ad2402188cf51573acde57eb269eddabaa60f69ea0d733e789fe9 \
@@ -557,9 +549,7 @@ pre-commit==3.8.0 \
 prometheus-client==0.20.0 \
     --hash=sha256:287629d00b147a32dcb2be0b9df905da599b2d82f80377083ec8463309a4bb89 \
     --hash=sha256:cde524a85bce83ca359cc837f28b8c0db5cac7aa653a588fd7e84ba061c329e7
-    # via
-    #   -r requirements/lib-py3.12.txt
-    #   bytewax
+    # via bytewax
 prompt-toolkit==3.0.47 \
     --hash=sha256:0d7bfa67001d5e39d02c224b663abc33687405033a8c422d0d675a5a13361d10 \
     --hash=sha256:1e1b29cb58080b1e69f207c893a1a7bf16d127a5c30c9d17a25a5d77792e5360
@@ -609,10 +599,7 @@ pyarrow==17.0.0 \
     --hash=sha256:f553ca691b9e94b202ff741bdd40f6ccb70cdd5fbf65c187af132f1317de6145 \
     --hash=sha256:f7ae2de664e0b158d1607699a16a488de3d008ba99b3a7aa5de1cbc13574d047 \
     --hash=sha256:fa3c246cc58cb5a4a5cb407a18f193354ea47dd0648194e6265bd24177982fe8
-    # via
-    #   -r requirements/lib-py3.12.txt
-    #   bytewax-duckdb (pyproject.toml)
-    #   bytewax-duckdb
+    # via bytewax-duckdb
 pydata-sphinx-theme==0.15.4 \
     --hash=sha256:2136ad0e9500d0949f96167e63f3e298620040aea8f9c74621959eda5d4cf8e6 \
     --hash=sha256:7762ec0ac59df3acecf49fd2f889e1b4565dbce8b88b2e29ee06fdd90645a06d
@@ -728,9 +715,9 @@ soupsieve==2.6 \
     --hash=sha256:e2e68417777af359ec65daac1057404a3c8a5455bb8abc36f1a9866ab1a51abb \
     --hash=sha256:e72c4ff06e4fb6e4b5a9f0f55fe6e81514581fca1515028625d0f299c602ccc9
     # via beautifulsoup4
-sphinx==8.0.2 \
-    --hash=sha256:0cce1ddcc4fd3532cf1dd283bc7d886758362c5c1de6598696579ce96d8ffa5b \
-    --hash=sha256:56173572ae6c1b9a38911786e206a110c9749116745873feae4f9ce88e59391d
+sphinx==8.1.3 \
+    --hash=sha256:09719015511837b76bf6e03e42eb7595ac8c2e41eeb9c29c5b755c6b677992a2 \
+    --hash=sha256:43c1911eecb0d3e161ad78611bc905d1ad0e523e4ddc202a58a821773dc4c927
     # via
     #   -r requirements/doc.in
     #   myst-parser
@@ -803,7 +790,6 @@ typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
     --hash=sha256:1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8
     # via
-    #   -r requirements/lib-py3.12.txt
     #   bytewax
     #   mypy
     #   pydata-sphinx-theme
