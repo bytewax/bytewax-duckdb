@@ -1,9 +1,7 @@
-"""Bytewax custom sink for DuckDB."""
-
 import os
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 if "BYTEWAX_LICENSE" not in os.environ:
     msg = (
@@ -16,56 +14,46 @@ if "BYTEWAX_LICENSE" not in os.environ:
     )
     print(msg, file=sys.stderr)
 
-from typing import Optional
-
 import pyarrow as pa  # type: ignore
-
 import duckdb as md_duckdb
 from bytewax.operators import V
 from bytewax.outputs import FixedPartitionedSink, StatefulSinkPartition
 
 
 class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
-    """Stateful sink partition for writing data to DuckDB."""
+    """Stateful sink partition for writing data to either local DuckDB or MotherDuck."""
 
     def __init__(
         self,
-        db_path: Path,
+        db_path: str,
         table_name: str,
         create_table_sql: Optional[str],
         resume_state: None,
     ) -> None:
-        """Initialize the DuckDB connection, and create tables if needed.
+        """Initialize the DuckDB or MotherDuck connection, and create tables if needed.
 
         Args:
-            db_path (Path): Path to the DuckDB database file.
+            db_path (str): Path to the DuckDB database file or MotherDuck connection string.
             table_name (str): Name of the table to write data into.
             create_table_sql (Optional[str]): SQL statement to create the table if
                 the table does not already exist.
-            resume_state (None):
-                Unused, as this sink does not perform recovery.
+            resume_state (None): Unused, as this sink does not perform recovery.
         """
         self.table_name = table_name
-        # Test if the path exists before connecting to the DB
-        # which will create the db on disk.
-        path_exists = db_path.exists()
         self.conn = md_duckdb.connect(db_path)
-        # Only create the db if this is a new file.
-        if create_table_sql and not path_exists:
+
+        # Only create the table if specified and if it doesn't already exist
+        if create_table_sql:
             self.conn.execute(create_table_sql)
 
     def write_batch(self, batches: List[V]) -> None:
-        """Write a batch of items to the DuckDB table.
-
-        When using this sink, each item should be a list of
-        dictionaries that can be serialized to the target table.
+        """Write a batch of items to the DuckDB or MotherDuck table.
 
         Args:
-            batches (List[V]]): List of batches of items to write.
+            batches (List[V]): List of batches of items to write.
         """
         for batch in batches:
             pa_table = pa.Table.from_pylist(batch)
-            # TODO: Was the fallback to pyarrow.executemany needed?
 
             # Insert data into the target table
             self.conn.register("temp_table", pa_table)
@@ -77,12 +65,12 @@ class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
         return None
 
     def close(self) -> None:
-        """Close the DuckDB connection."""
+        """Close the DuckDB or MotherDuck connection."""
         self.conn.close()
 
 
 class DuckDBSink(FixedPartitionedSink):
-    """Fixed partitioned sink for writing data to DuckDB.
+    """Fixed partitioned sink for writing data to DuckDB or MotherDuck.
 
     This sink writes to a single output DB, optionally creating
     it with a create table SQL statement when first invoked.
@@ -90,17 +78,17 @@ class DuckDBSink(FixedPartitionedSink):
 
     def __init__(
         self,
-        db_path: Path,
-        table_name: str,
+        db_path: str,
+        table_name: str = "default_table",
         create_table_sql: Optional[str] = None,
     ) -> None:
         """Initialize the DuckDBSink.
 
         Args:
-            db_path (str): DuckDB database file path.
+            db_path (str): DuckDB database file path or MotherDuck connection string.
             table_name (str): Name of the table to write data into.
             create_table_sql (Optional[str]): SQL statement to create the table
-                if it does not already exist..
+                if it does not already exist.
         """
         self.db_path = db_path
         self.table_name = table_name
@@ -125,11 +113,14 @@ class DuckDBSink(FixedPartitionedSink):
         Args:
             step_id (str): The step ID.
             for_part (str): Partition key.
-            resume_state (Optional[Tuple[int, int]]): Resume state.
+            resume_state (None): Resume state.
 
         Returns:
             DuckDBSinkPartition: The partition instance.
         """
         return DuckDBSinkPartition(
-            self.db_path, self.table_name, self.create_table_sql, resume_state
+            db_path=self.db_path,
+            table_name=self.table_name,
+            create_table_sql=self.create_table_sql,
+            resume_state=resume_state,
         )
