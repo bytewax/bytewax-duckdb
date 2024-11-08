@@ -782,9 +782,9 @@ traitlets==5.14.3 \
     # via
     #   ipython
     #   matplotlib-inline
-types-docutils==0.21.0.20240907 \
-    --hash=sha256:5dd2aa5e2e06fcfa090020bc4115479b4dd28da3329ab708563ee29894bd3c0d \
-    --hash=sha256:9c8ed6d90583944af00f6b5fa3aecc2101e20672f6b1a4a299c6bf7d1e47084d
+types-docutils==0.21.0.20241005 \
+    --hash=sha256:48f804a2b50da3a1b1681c4ca1b6184416a6e4129e302d15c44e9d97c59b3365 \
+    --hash=sha256:4d9021422f2f3fca8b0726fb8949395f66a06c0d951479eb3b1387d75b134430
     # via -r requirements/dev.in
 typing-extensions==4.12.2 \
     --hash=sha256:04e5ca0351e0f3f85c6853954072df659d0d13fac324d0072316b67d7794700d \
