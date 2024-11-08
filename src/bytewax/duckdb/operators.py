@@ -8,7 +8,6 @@ Usage:
 """
 
 from datetime import timedelta
-from pathlib import Path
 from typing import List, Optional
 
 import bytewax.operators as op
@@ -32,7 +31,7 @@ def _to_sink(
 def output(
     step_id: str,
     up: KeyedStream[V],
-    db_path: Path,
+    db_path: str,
     table_name: str,
     create_table_sql: Optional[str],
     timeout: timedelta = timedelta(seconds=1),

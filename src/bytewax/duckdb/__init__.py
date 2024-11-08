@@ -1,6 +1,7 @@
+"""Bytewax DuckDB module for writing data to DuckDB or MotherDuck."""
+
 import os
 import sys
-from pathlib import Path
 from typing import List, Optional
 
 if "BYTEWAX_LICENSE" not in os.environ:
@@ -15,6 +16,7 @@ if "BYTEWAX_LICENSE" not in os.environ:
     print(msg, file=sys.stderr)
 
 import pyarrow as pa  # type: ignore
+
 import duckdb as md_duckdb
 from bytewax.operators import V
 from bytewax.outputs import FixedPartitionedSink, StatefulSinkPartition
@@ -33,7 +35,8 @@ class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
         """Initialize the DuckDB or MotherDuck connection, and create tables if needed.
 
         Args:
-            db_path (str): Path to the DuckDB database file or MotherDuck connection string.
+            db_path (str): Path to the DuckDB database file or MotherDuck
+                connection string.
             table_name (str): Name of the table to write data into.
             create_table_sql (Optional[str]): SQL statement to create the table if
                 the table does not already exist.
