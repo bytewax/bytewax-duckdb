@@ -1,4 +1,59 @@
-"""Bytewax DuckDB module for writing data to DuckDB or MotherDuck."""
+"""Bytewax DuckDB Sink implementation.
+
+This module provides a robust sink for writing data to a DuckDB or MotherDuck
+database using Bytewax's streaming data processing framework. The sink
+manages database connections, table creation, and batch writing for high-volume
+data flows.
+
+Classes:
+    DuckDBSink: A fixed partitioned sink that defines the target DuckDB or
+                MotherDuck database and manages partition setup.
+    DuckDBSinkPartition: A stateful partition that handles the actual data
+                         writing to the DuckDB or MotherDuck tables.
+
+Usage:
+    - Use the `DuckDBSink` class to configure the connection to the target
+      database, specify table details, and initialize the sink for Bytewax dataflows.
+    - The `DuckDBSinkPartition` class manages the writing of data in batches
+      and executes custom SQL statements to create tables if specified.
+
+Warning:
+    This module requires a commercial license for non-prototype use with
+    business data. Set the environment variable `BYTEWAX_LICENSE=1` to suppress
+    the warning message in production environments.
+
+Logging:
+    Python's logging library is used to log essential events, such as connection
+    status, batch operations, and any error messages.
+
+**Sample usage**:
+
+```python
+from bytewax.duckdb_sink import DuckDBSink
+
+# Define the SQL statement to create the table if it doesn't exist
+create_table_sql = "CREATE TABLE IF NOT EXISTS my_table (\
+    id STRING,\
+    content STRING,\
+    timestamp TIMESTAMP)"
+
+# Initialize the DuckDBSink with your database path and table details
+duckdb_sink = DuckDBSink(
+    db_path="path/to/your/database.duckdb",
+    table_name="my_table",
+    create_table_sql=create_table_sql
+)
+
+# Alternatively, you can use a MotherDuck connection string with a token
+duckdb_sink = DuckDBSink(
+    db_path="md://your-connection-string",
+    table_name="my_table",
+    create_table_sql=create_table_sql
+)
+```
+Note: For further examples and usage patterns, refer to the
+[Bytewax DuckDB documentation](https://github.com/bytewax/bytewax-duckdb).
+"""
 
 import os
 import sys
