@@ -3,6 +3,43 @@
 This module provides operators for writing data to DuckDB or MotherDuck
 using the Bytewax DuckDB sink.
 
+When working with this sink in Bytewax, we’re dealing with tools that let us
+batch and write data to a target database or file in a structured way.
+However, there’s one essential assumption you need to know: the sink expects
+data in a specific tuple format, structured as:
+
+```python
+("key", List[Dict])
+```
+
+Where
+
+`"key"`: The first element is a string identifier for the batch.
+Think of this as a “batch ID” that helps to organize and keep
+track of which group of entries belong together.
+Every batch you send to the sink has a unique key or identifier.
+
+`List[Dict]`: The second element is a list of dictionaries.
+Each dictionary represents an individual data record,
+with each key-value pair in the dictionary representing
+fields and their corresponding values.
+
+Together, the tuple tells the sink: “Here is a batch of data,
+labeled with a specific key, and this batch contains multiple data entries.”
+
+This format is designed to let the sink write data efficiently in batches,
+rather than handling each entry one-by-one. By grouping data entries
+together with an identifier, the sink can:
+
+Optimize Writing: Batching data reduces the frequency of writes to
+the database or file, which can dramatically improve performance,
+especially when processing high volumes of data.
+
+Ensure Atomicity: By writing a batch as a single unit,
+we minimize the risk of partial writes, ensuring either the whole
+batch is written or none at all. This is especially important for
+maintaining data integrity.
+
 Usage:
 
 ```
@@ -25,7 +62,7 @@ def create_dict(value: int) -> Tuple[str, Dict[str, Union[int, str]]]:
     name = random.choice(names)
     age = random.randint(20, 60)  # Random age between 20 and 60
     location = random.choice(locations)
-    # The following marks batch '1' to be written to MotherDuck
+    # The following marks batch '1' to be written to the database
     return ("1", {"id": value, "name": name, "age": age, "location": location})
 
 # Generate input data
