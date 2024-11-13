@@ -17,6 +17,43 @@ Usage:
     - The `DuckDBSinkPartition` class manages the writing of data in batches
       and executes custom SQL statements to create tables if specified.
 
+When working with this sink in Bytewax, you can use it to process data in
+batch and write data to a target database or file in a structured way.
+However, there’s one essential assumption you need to know: the sink expects
+data in a specific tuple format, structured as:
+
+```python
+("key", List[Dict])
+```
+
+Where
+
+`"key"`: The first element is a string identifier for the batch.
+Think of this as a “batch ID” that helps to organize and keep
+track of which group of entries belong together.
+Every batch you send to the sink has a unique key or identifier.
+
+`List[Dict]`: The second element is a list of dictionaries.
+Each dictionary represents an individual data record,
+with each key-value pair in the dictionary representing
+fields and their corresponding values.
+
+Together, the tuple tells the sink: “Here is a batch of data,
+labeled with a specific key, and this batch contains multiple data entries.”
+
+This format is designed to let the sink write data efficiently in batches,
+rather than handling each entry one-by-one. By grouping data entries
+together with an identifier, the sink can:
+
+* Optimize Writing: Batching data reduces the frequency of writes to
+the database or file, which can dramatically improve performance,
+especially when processing high volumes of data.
+
+* Ensure Atomicity: By writing a batch as a single unit,
+we minimize the risk of partial writes, ensuring either the whole
+batch is written or none at all. This is especially important for
+maintaining data integrity.
+
 Warning:
     This module requires a commercial license for non-prototype use with
     business data. Set the environment variable `BYTEWAX_LICENSE=1` to suppress
@@ -26,31 +63,7 @@ Logging:
     Python's logging library is used to log essential events, such as connection
     status, batch operations, and any error messages.
 
-**Sample usage**:
 
-```python
-from bytewax.duckdb_sink import DuckDBSink
-
-# Define the SQL statement to create the table if it doesn't exist
-create_table_sql = "CREATE TABLE IF NOT EXISTS my_table (\
-    id STRING,\
-    content STRING,\
-    timestamp TIMESTAMP)"
-
-# Initialize the DuckDBSink with your database path and table details
-duckdb_sink = DuckDBSink(
-    db_path="path/to/your/database.duckdb",
-    table_name="my_table",
-    create_table_sql=create_table_sql
-)
-
-# Alternatively, you can use a MotherDuck connection string with a token
-duckdb_sink = DuckDBSink(
-    db_path="md://your-connection-string",
-    table_name="my_table",
-    create_table_sql=create_table_sql
-)
-```
 Note: For further examples and usage patterns, refer to the
 [Bytewax DuckDB documentation](https://github.com/bytewax/bytewax-duckdb).
 """
