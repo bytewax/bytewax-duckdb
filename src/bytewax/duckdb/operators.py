@@ -1,9 +1,58 @@
 """Operators for the DuckDB sink.
 
-TODO: usage
+This module provides operators for writing data to DuckDB or MotherDuck
+using the Bytewax DuckDB sink.
 
 Usage:
+
 ```
+import bytewax.duckdb.operators as duck_op
+import bytewax.operators as op
+from bytewax.dataflow import Dataflow
+from bytewax.testing import run_main, TestingSource
+import random
+from typing import Dict, Tuple, Union
+
+# Initialize the dataflow
+flow = Dataflow("duckdb-names-cities")
+
+# Define sample data for names and locations
+names = ["Alice", "Bob", "Charlie", "Diana", "Eve"]
+locations = ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"]
+
+# Function to create a dictionary with more varied data
+def create_dict(value: int) -> Tuple[str, Dict[str, Union[int, str]]]:
+    name = random.choice(names)
+    age = random.randint(20, 60)  # Random age between 20 and 60
+    location = random.choice(locations)
+    # The following marks batch '1' to be written to MotherDuck
+    return ("1", {"id": value, "name": name, "age": age, "location": location})
+
+# Generate input data
+inp = op.input("inp", flow, TestingSource(range(50)))
+dict_stream = op.map("dict", inp, create_dict)
+
+# Output the data to DuckDB, creating a table with multiple columns
+duck_op.output(
+    "out",
+    dict_stream,
+    db_path,
+    "names_cities",
+    "CREATE TABLE IF NOT EXISTS names_cities\
+        (id INTEGER, name TEXT, age INTEGER, location TEXT)"
+)
+
+# Run the dataflow
+run_main(flow)
+```
+
+We can verify it was written to the database by querying the table:
+
+```
+import duckdb
+
+con = duckdb.connect(db_path)
+con.execute("SELECT * FROM names_cities").fetchdf()
 ```
 """
 
