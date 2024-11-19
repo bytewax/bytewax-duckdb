@@ -39,33 +39,38 @@ def create_table_sql() -> str:
     return "CREATE TABLE test_table (id INTEGER, name TEXT)"
 
 
-def test_duckdb_sink(db_path: str, table_name: str) -> None:
+def test_duckdb_sink(db_path: Path, table_name: str) -> None:
+    """Test that DuckDBSink writes all items correctly."""
     flow = Dataflow("duckdb")
 
     def create_dict(value: int) -> Tuple[str, List[Dict[str, Union[int, str]]]]:
-        return (str(value), [{"id": value, "name": "Alice"}])
+        return (str(value), [{"id": value, "name": f"Name_{value}"}])
 
     inp = op.input("inp", flow, TestingSource(range(100)))
     dict_stream = op.map("dict", inp, create_dict)
+
     op.output(
         "out",
         dict_stream,
         DuckDBSink(
-            db_path,
+            str(db_path),  # Convert Path to string
             table_name,
-            f"CREATE TABLE {table_name} (id INTEGER, name TEXT)",
+            f"CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER, name TEXT)",
         ),
     )
     run_main(flow)
-    conn = duckdb.connect(db_path)
-    assert conn.sql(f"SELECT COUNT(*) from {table_name}").fetchall() == [(100,)]
+
+    conn = duckdb.connect(str(db_path))  # Convert Path to string
+    result = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
+    assert result == (100,)
 
 
-def test_duckdb_operator(db_path: str, table_name: str) -> None:
+def test_duckdb_operator(db_path: Path, table_name: str) -> None:
+    """Test that the DuckDB operator appends data correctly across runs."""
     flow = Dataflow("duckdb")
 
     def create_dict(value: int) -> Tuple[str, Dict[str, Union[int, str]]]:
-        return (str(value), {"id": value, "name": "Alice"})
+        return (str(value), {"id": value, "name": f"Name_{value}"})
 
     inp = op.input("inp", flow, TestingSource(range(100)))
     dict_stream = op.map("dict", inp, create_dict)
@@ -74,17 +79,30 @@ def test_duckdb_operator(db_path: str, table_name: str) -> None:
     duck_op.output(
         "out",
         dict_stream,
-        db_path,
+        str(db_path),  # Convert Path to string
         table_name,
         f"CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER, name TEXT)",
     )
 
+    # First run
+    run_main(flow)
+    conn = duckdb.connect(str(db_path))  # Convert Path to string
+    first_result = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
+    assert first_result == (100,)
+
+    # Second run: reinitialize the dataflow and append
+    flow = Dataflow("duckdb")
+    inp = op.input("inp", flow, TestingSource(range(100)))
+    dict_stream = op.map("dict", inp, create_dict)
+
+    duck_op.output(
+        "out",
+        dict_stream,
+        str(db_path),  # Convert Path to string
+        table_name,
+        f"CREATE TABLE IF NOT EXISTS {table_name} (id INTEGER, name TEXT)",
+    )
     run_main(flow)
 
-    # Connect to the database and verify the results
-    conn = duckdb.connect(db_path)
-    assert conn.sql(f"SELECT COUNT(*) FROM {table_name}").fetchall() == [(100,)]
-
-    # Run the flow a second time and check if data is appended correctly
-    run_main(flow)
-    assert conn.sql(f"SELECT COUNT(*) FROM {table_name}").fetchall() == [(200,)]
+    second_result = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()
+    assert second_result == (200,)

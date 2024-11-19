@@ -1,7 +1,7 @@
 [project]
 name = "bytewax-duckdb"
-version = "0.1.21"
-description = "Bytewax custom sink for DuckDB"
+version = "0.1.22"
+description = "Bytewax custom sink for DuckDB and MotherDuck"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {file = "LICENSE.md"}

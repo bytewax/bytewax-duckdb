@@ -87,3 +87,4 @@ pyrightconfig.json
 # Devenv stuff
 .devenv.flake.nix
 devenv.*
+examples/.env

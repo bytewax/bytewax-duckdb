@@ -105,6 +105,11 @@ class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
     ) -> None:
         """Initialize the DuckDB or MotherDuck connection, and create tables if needed.
 
+        Note: To connect to a MotherDuck instance, ensure to:
+        1. Create an account https://app.motherduck.com/?auth_flow=signup
+        2. Generate a token
+        https://motherduck.com/docs/key-tasks/authenticating-and-connecting-to-motherduck/authenticating-to-motherduck/)
+
         Args:
             db_path (str): Path to the DuckDB database file or MotherDuck
                 connection string.
@@ -114,6 +119,8 @@ class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
             resume_state (None): Unused, as this sink does not perform recovery.
         """
         self.table_name = table_name
+        # Ensure db_path is a string
+        db_path = str(db_path)  # Convert to string if it's a Path object
         parsed_db_path = urlparse(db_path)
         path = parsed_db_path.path
         config = dict(parse_qsl(parsed_db_path.query))
