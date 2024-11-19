@@ -119,7 +119,7 @@ class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
         config = dict(parse_qsl(parsed_db_path.query))
 
         if parsed_db_path.scheme == MOTHERDUCK_SCHEME:
-            path = f"md:{parsed_db_path.path}"
+            path = f"{MOTHERDUCK_SCHEME}:{parsed_db_path.path}"
             if "custom_user_agent" not in config:
                 config["custom_user_agent"] = "bytewax"
 
