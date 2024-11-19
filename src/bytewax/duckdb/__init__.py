@@ -71,6 +71,7 @@ Note: For further examples and usage patterns, refer to the
 import os
 import sys
 from typing import List, Optional
+from urllib.parse import parse_qsl, urlparse
 
 if "BYTEWAX_LICENSE" not in os.environ:
     msg = (
@@ -88,6 +89,8 @@ import pyarrow as pa  # type: ignore
 import duckdb as md_duckdb
 from bytewax.operators import V
 from bytewax.outputs import FixedPartitionedSink, StatefulSinkPartition
+
+MOTHERDUCK_SCHEME = "md"
 
 
 class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
@@ -111,7 +114,16 @@ class DuckDBSinkPartition(StatefulSinkPartition[V, None]):
             resume_state (None): Unused, as this sink does not perform recovery.
         """
         self.table_name = table_name
-        self.conn = md_duckdb.connect(db_path)
+        parsed_db_path = urlparse(db_path)
+        path = parsed_db_path.path
+        config = dict(parse_qsl(parsed_db_path.query))
+
+        if parsed_db_path.scheme == MOTHERDUCK_SCHEME:
+            path = f"{MOTHERDUCK_SCHEME}:{parsed_db_path.path}"
+            if "custom_user_agent" not in config:
+                config["custom_user_agent"] = "bytewax"
+
+        self.conn = md_duckdb.connect(path, config=config)
 
         # Only create the table if specified and if it doesn't already exist
         if create_table_sql:
