@@ -1,6 +1,6 @@
 [![Actions Status](https://github.com/bytewax/bytewax-duckdb/workflows/CI/badge.svg)](https://github.com/bytewax/bytewax-duckdb/actions)
 [![PyPI](https://img.shields.io/pypi/v/bytewax-duckdb.svg?style=flat-square)](https://pypi.org/project/bytewax-duckdb/)
-[![Bytewax User Guide](https://img.shields.io/badge/user-guide-brightgreen?style=flat-square)](https://docs.bytewax.io/projects/bytewax-duckdb/en/stable/)
+[![Bytewax User Guide](https://img.shields.io/badge/user-guide-brightgreen?style=flat-square)](https://bytewax-duckdb.readthedocs.io/en/latest/?badge=latest)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/6073079/195393689-7334098b-a8cd-4aaa-8791-e4556c25713e.png" width="350">
